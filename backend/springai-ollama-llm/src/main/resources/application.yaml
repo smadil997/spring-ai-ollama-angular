@@ -1,21 +1,42 @@
 
 
 spring:
+  servlet:
+    multipart:
+      max-file-size: 200MB
+      max-request-size: 200MB
+  datasource:
+    url: jdbc:postgresql://localhost:5431/ollama-llm-dev
+    username: ollama
+    password: ollama
+    jpa:
+      hibernate:
+        ddl-auto: update
+      properties:
+        hibernate:
+          dialect: org.hibernate.dialect.PostgreSQLDialect
   application:
     name: springai-ollama-llm
   ai:
     vectorstore:
-      pgvector:
+      qdrant:
         remove-existing-vector-store-table: true
         initialize-schema: true
+        host: localhost
+        port: 6333
+        collection-name: vector_store
+#      pgvector:
+#        dimensions: 4096
+#        remove-existing-vector-store-table: true
+#        initialize-schema: true
     ollama:
       init:
       chat:
         options:
-          model: gemma3:4b #Defind your local downloaded model here otherwise spring application load default model mistral
+          model: qwen3:8b #Defind your local downloaded model here otherwise spring application load default model mistral
           temperature: 0.9
         pull-model-strategy: never #Alwway use never if you don't want to download at application load/run time
       embedding:
         options:
-          model: nomic-embed-text:latest  # or mxbai-embed-large
+          model: qwen3-embedding:8b #nomic-embed-text:v1.5 #qwen3-embedding:8b  # or mxbai-embed-large
 

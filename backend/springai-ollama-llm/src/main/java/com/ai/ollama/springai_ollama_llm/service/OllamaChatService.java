@@ -18,41 +18,67 @@ import java.time.Duration;
 @Log4j2
 public class OllamaChatService {
 
+    // Chat model used to generate responses (Ollama LLM)
     private final OllamaChatModel chatModel;
+
+    // Vector store used for semantic search (RAG)
     private final VectorStore vectorStore;
+
+    // Embedding model used to convert text into vectors
     @Autowired
     private OllamaEmbeddingModel embeddingModel;
 
-    public OllamaChatService(OllamaChatModel chatModel, VectorStore vectorStore, OllamaChatModel chatModel1, OllamaEmbeddingModel ollamaEmbeddingModel, VectorStore vectorStore1) {
+    // ❌ Constructor (currently problematic – explained below)
+    public OllamaChatService(OllamaChatModel chatModel,
+                             VectorStore vectorStore,
+                             OllamaChatModel chatModel1,
+                             OllamaEmbeddingModel ollamaEmbeddingModel,
+                             VectorStore vectorStore1) {
+
+        // Assigning duplicate parameters (confusing + incorrect usage)
         this.chatModel = chatModel1;
         this.vectorStore = vectorStore1;
-
     }
 
-    public Flux<String> processMessage(String messagePrompt) {
 
+    // Method to stream response token-by-token (reactive streaming)
+    public Flux<String> processMessage(String messagePrompt) {
+        // Create prompt object from user input
         Prompt prompt = new Prompt(messagePrompt);
-        return chatModel.stream(prompt)
+        return chatModel.stream(prompt)   // Stream response from LLM
+
+                // Extract only text from ChatResponse
                 .map(chatResponse -> {
-                    System.out.println(chatResponse.getResult().getOutput().getText());
                     return chatResponse.getResult().getOutput().getText();
                 })
+                // Add artificial delay between tokens (for UI streaming effect)
                 .delayElements(Duration.ofSeconds(1));
     }
 
 
-
+    // RAG-based response (uses Vector DB + LLM)
     public String getEmbeddedModelResp(String userText) {
-        return ChatClient.builder(chatModel)
-                .build().prompt()
+
+        return ChatClient.builder(chatModel)   // Build chat client
+
+                .build()
+                .prompt()
+
+                // Connect vector store for retrieving relevant chunks
                 .advisors(new QuestionAnswerAdvisor(vectorStore))
-                .user(userText)
-                .call()
-                .chatResponse().getResult().getOutput().getText();
+
+                .user(userText)                // User query
+                .call()                        // Execute request
+                .chatResponse()                // Get response object
+                .getResult()
+                .getOutput()
+                .getText();                   // Final answer
     }
 
-    //This method will return the complete response with all chat metadata
+
+    // Stream full ChatResponse (not just text)
     public Flux<ChatResponse> processMessageChatResponse(String gemma34Dtos) {
+        // Returns full response including metadata (tokens, role, etc.)
         return chatModel.stream(new Prompt(gemma34Dtos));
     }
 }

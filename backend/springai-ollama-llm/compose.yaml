@@ -1,11 +1,38 @@
+#services:
+#  postgres:
+#    hostname: postgres
+#    build:
+#      context: .
+#      dockerfile: ./dockerfiles/postgres.Dockerfile   # <- adjust path
+#    container_name: "ollama-llm-dev-db"
+#    image: "ollama-llm-dev-db"
+#    environment:
+#      POSTGRES_DB: "ollama-llm-dev"
+#      POSTGRES_USER: "ollama"
+#      POSTGRES_PASSWORD: "ollama"
+#      PGDATA: "/data/ollama-llm-dev-db"
+#    volumes:
+#      - "ollama-llm-dev-db-docker:/data/ollama-llm-dev-db"
+#    ports:
+#      - "5431:5432"
+#    restart: unless-stopped
+#
+#volumes:
+#  ollama-llm-dev-db-docker: {}
+#    external: true
+
+version: '3.8'
+
 services:
-  pgvector:
-    image: 'pgvector/pgvector:pg16'
-    environment:
-      - 'POSTGRES_DB=ollam-llm-dev'
-      - 'POSTGRES_PASSWORD=user'
-      - 'POSTGRES_USER=user'
-    labels:
-      - "org.springframework.boot.service-connection=postgres"
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: qdrant
     ports:
-      - '5432:5432'
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    restart: unless-stopped
+
+volumes:
+  qdrant_data:
